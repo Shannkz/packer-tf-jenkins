@@ -4,7 +4,7 @@ resource "aws_security_group" "jenkins_server" {
   description = "Jenkins Server: created by Terraform for [dev]"
 
   # legacy name of VPC ID
-  vpc_id = "${data.aws_vpc.default_vpc.id}"
+  vpc_id = var.vpc_id
 
   tags = {
     Name = "jenkins_server"
@@ -36,6 +36,16 @@ resource "aws_security_group_rule" "jenkins_server_from_source_ingress_webui" {
   security_group_id = "${aws_security_group.jenkins_server.id}"
   cidr_blocks       = ["0.0.0.0/0"]
   description       = "jenkins server web"
+}
+
+resource "aws_security_group_rule" "jenkins_server_from_source_ingress_http" {
+  type              = "ingress"
+  from_port         = 80
+  to_port           = 80
+  protocol          = "tcp"
+  security_group_id = "${aws_security_group.jenkins_server.id}"
+  cidr_blocks       = ["0.0.0.0/0"]
+  description       = "jenkins server HTTP"
 }
 
 # JNLP
@@ -73,15 +83,15 @@ resource "aws_security_group_rule" "jenkins_server_outbound_all_80" {
   description       = "allow jenkins servers for outbound yum"
 }
 
-resource "aws_security_group_rule" "jenkins_server_outbound_all_8080" {
-  type              = "egress"
-  from_port         = 8080
-  to_port           = 8080
-  protocol          = "tcp"
-  security_group_id = "${aws_security_group.jenkins_server.id}"
-  cidr_blocks       = ["0.0.0.0/0"]
-  description       = "allow jenkins servers for outbound web ui"
-}
+# resource "aws_security_group_rule" "jenkins_server_outbound_all_8080" {
+#   type              = "egress"
+#   from_port         = 8080
+#   to_port           = 8080
+#   protocol          = "tcp"
+#   security_group_id = "${aws_security_group.jenkins_server.id}"
+#   cidr_blocks       = ["0.0.0.0/0"]
+#   description       = "allow jenkins servers for outbound web ui"
+# }
 
 resource "aws_security_group_rule" "jenkins_server_outbound_all_443" {
   type              = "egress"

@@ -68,10 +68,10 @@ EOF
 
 function install_packages ()
 {
-
-  wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat-stable/jenkins.repo
-  rpm --import https://jenkins-ci.org/redhat/jenkins-ci.org.key
-  yum install -y jenkins
+  wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
+  sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+  sudo apt-get update
+  sudo apt-get install jenkins -y
 
   # firewall
   #firewall-cmd --permanent --new-service=jenkins
@@ -81,8 +81,9 @@ function install_packages ()
   #firewall-cmd --permanent --add-service=jenkins
   #firewall-cmd --zone=public --add-service=http --permanent
   #firewall-cmd --reload
-  systemctl enable jenkins
-  systemctl restart jenkins
+  # systemctl enable jenkins
+  # systemctl restart jenkins
+  sudo systemctl start jenkins
   sleep 10
 }
 
@@ -136,4 +137,3 @@ configure_jenkins_server
 
 echo "Done"
 exit 0
-

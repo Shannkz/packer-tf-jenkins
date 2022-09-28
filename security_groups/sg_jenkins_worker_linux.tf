@@ -3,7 +3,7 @@ resource "aws_security_group" "dev_jenkins_worker_linux" {
   description = "Jenkins Server: created by Terraform for [dev]"
 
   # legacy name of VPC ID
-  vpc_id = "${data.aws_vpc.default_vpc.id}"
+  vpc_id = var.vpc_id
 
   tags = {
     Name = "dev_jenkins_worker_linux"

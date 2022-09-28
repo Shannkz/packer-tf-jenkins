@@ -1,17 +1,90 @@
 # Setting Up Windows Slave 
-data "aws_ami" "jenkins_worker_windows" {
-  most_recent      = true
-  owners           = ["self"]
+# data "aws_ami" "jenkins_worker_windows" {
+#   most_recent      = true
+#   owners           = ["self"]
 
-  filter {
-    name   = "name"
-    values = ["windows-slave-for-jenkins*"]
-  }
-}
+#   filter {
+#     name   = "name"
+#     values = ["windows-slave-for-jenkins*"]
+#   }
+# }
 
 resource "aws_key_pair" "jenkins_worker_windows" {
   key_name   = "jenkins_worker_windows"
-  public_key = "${file("jenkins_worker.pub")}"
+  public_key = "${file("${path.module}/jenkins_worker.pub")}"
+}
+
+// Get local file for content
+data "local_file" "jenkins_worker_pem" {
+  filename = "${path.module}/jenkins_worker.pem"
+}
+
+# Fetch from AWS API most recent Amazon Linux 20.04 image
+data "aws_ami" "windows_server" {
+    most_recent = "true"
+
+    filter {
+      name = "name"
+      values = ["Windows_Server-2016-English-Full-Containers-*"]
+    }
+
+    filter {
+      name = "virtualization-type"
+      values = ["hvm"]
+    }
+
+    filter {
+      name = "root-device-type"
+      values = ["ebs"]
+    }
+
+    # owners = ["microsoft"]
+}
+
+data "cloudinit_config" "windows" {
+  gzip = false
+  base64_encode = false
+
+  part {
+    content_type = "text/x-shellscript"
+    filename = "SetUpWinRM.ps1"
+    content = file("${path.module}/scripts/SetUpWinRM.ps1")
+  }
+
+  part {
+    content_type = "text/x-shellscript"
+    filename = "disable-uac.ps1"
+    content = file("${path.module}/scripts/disable-uac.ps1")
+  }
+
+  part {
+    content_type = "text/x-shellscript"
+    filename = "enable-rdp.ps1"
+    content = file("${path.module}/scripts/enable-rdp.ps1")
+  }
+
+  part {
+    content_type = "text/x-shellscript"
+    filename = "install_windows.ps1"
+    content = file("${path.module}/scripts/install_windows.ps1")
+  }
+
+  part {
+    content_type = "text/x-shellscript"
+    filename = "jekins_worker_windows.ps1"
+    content = templatefile("${path.module}/scripts/jenkins_worker_windows.ps1", {
+      env         = "dev"
+      region      = "eu-central-1"
+      datacenter  = "dev-eu-central-1"
+      node_name   = "eu-central-1-jenkins_worker_windows"
+      domain      = ""
+      device_name = "eth0"
+      server_ip   = "${aws_instance.jenkins_server.private_ip}"
+      worker_pem  = "${data.local_file.jenkins_worker_pem.content}"
+      jenkins_username = "admin"
+      jenkins_password = "mysupersecretpassword"
+  })
+  }
 }
 
 # data "template_file" "userdata_jenkins_worker_windows" {
@@ -41,25 +114,26 @@ data "aws_security_group" "jenkins_worker_windows" {
 
 resource "aws_launch_configuration" "jenkins_worker_windows" {
   name_prefix                 = "dev-jenkins-worker-"
-  image_id                    = "${data.aws_ami.jenkins_worker_windows.image_id}"
+  image_id                    = "${data.aws_ami.windows_server.image_id}"
   instance_type               = "t2.micro"
   iam_instance_profile        = "dev_jenkins_worker_windows"
   key_name                    = "${aws_key_pair.jenkins_worker_windows.key_name}"
   security_groups             = ["${data.aws_security_group.jenkins_worker_windows.id}"]
   # user_data                   = "${data.template_file.userdata_jenkins_worker_windows.rendered}"
-  user_data              		= templatefile("scripts/jenkins_worker_windows.ps1", {
-    env         = "dev"
-    region      = "eu-central-1"
-    datacenter  = "dev-eu-central-1"
-    node_name   = "eu-central-1-jenkins_worker_windows"
-    domain      = ""
-    device_name = "eth0"
-    server_ip   = "${aws_instance.jenkins_server.private_ip}"
-    worker_pem  = "${data.local_file.jenkins_worker_pem.content}"
-    jenkins_username = "admin"
-    jenkins_password = "mysupersecretpassword"
-  })
-  associate_public_ip_address = false
+  # user_data              		= templatefile("scripts/jenkins_worker_windows.ps1", {
+  #   env         = "dev"
+  #   region      = "eu-central-1"
+  #   datacenter  = "dev-eu-central-1"
+  #   node_name   = "eu-central-1-jenkins_worker_windows"
+  #   domain      = ""
+  #   device_name = "eth0"
+  #   server_ip   = "${aws_instance.jenkins_server.private_ip}"
+  #   worker_pem  = "${data.local_file.jenkins_worker_pem.content}"
+  #   jenkins_username = "admin"
+  #   jenkins_password = "mysupersecretpassword"
+  # })
+  user_data = data.cloudinit_config.windows.rendered
+  associate_public_ip_address = true
 
   root_block_device {
     delete_on_termination = true
@@ -73,12 +147,12 @@ resource "aws_launch_configuration" "jenkins_worker_windows" {
 
 resource "aws_autoscaling_group" "jenkins_worker_windows" {
   name                      = "dev-jenkins-worker-windows"
-  min_size                  = "1"
-  max_size                  = "2"
-  desired_capacity          = "1"
+  min_size                  = "0"
+  max_size                  = "0"
+  desired_capacity          = "0"
   health_check_grace_period = 60
   health_check_type         = "EC2"
-  vpc_zone_identifier       = data.aws_subnets.default_public.ids
+  vpc_zone_identifier       = data.aws_subnets.jenkins_public.ids
   launch_configuration      = "${aws_launch_configuration.jenkins_worker_windows.name}"
   termination_policies      = ["OldestLaunchConfiguration"]
   wait_for_capacity_timeout = "10m"

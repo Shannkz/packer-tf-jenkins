@@ -5,13 +5,13 @@ function Wait-For-Jenkins {
   Write-Host "Waiting jenkins to launch on 8080..."
 
   Do {
-  Write-Host "Waiting for Jenkins"
+    Write-Host "Waiting for Jenkins"
 
-   Nc -zv ${server_ip} 8080
-   If( $? -eq $true ) {
-     Break
-   }
-   Sleep 10
+    Nc -zv ${server_ip} 8080
+    If( $? -eq $true ) {
+      Break
+    }
+    Sleep 10
 
   } While (1)
 
@@ -42,7 +42,7 @@ function Slave-Setup()
   echo $AUTH
 
   # Below IP collection logic works for Windows Server 2016 edition and needs testing for windows server 2008 edition
-  $SLAVE_IP=(ipconfig | findstr /r "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*" | findstr "IPv4 Address").substring(39) | findstr /B "172.31"
+  $SLAVE_IP=(ipconfig | findstr /r "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*" | findstr "IPv4 Address").substring(39) | findstr /B "10.4"
   
   $NODE_NAME="jenkins-slave-windows-$SLAVE_IP"
   

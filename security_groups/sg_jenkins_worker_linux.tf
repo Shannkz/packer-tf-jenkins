@@ -22,7 +22,7 @@ resource "aws_security_group_rule" "jenkins_worker_linux_from_source_ingress_ssh
   to_port           = 22
   protocol          = "tcp"
   security_group_id = "${aws_security_group.dev_jenkins_worker_linux.id}"
-  cidr_blocks       = ["82.78.232.79/32"]
+  cidr_blocks       = ["82.78.232.79/32", "10.4.1.0/24"]
   description       = "ssh to jenkins_worker_linux"
 }
 

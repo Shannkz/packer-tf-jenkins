@@ -27,7 +27,7 @@ sudo usermod -a -G docker ubuntu
 sudo apt-get install -y default-jre
 sudo apt-get install fontconfig
 
-sudo apt install -y python3-pip jq unzip vim tree at screen tmux git gcc make nodejs
+sudo apt install -y python3-pip xmlstarlet jq unzip vim tree at screen tmux git gcc make nodejs
 sudo -H pip install awscli bcrypt
 sudo -H pip install --upgrade awscli
 sudo -H pip install --upgrade aws-ec2-assign-elastic-ip

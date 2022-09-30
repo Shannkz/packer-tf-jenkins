@@ -23,7 +23,7 @@ resource "aws_security_group_rule" "jenkins_server_from_source_ingress_ssh" {
   to_port           = 22
   protocol          = "tcp"
   security_group_id = "${aws_security_group.jenkins_server.id}"
-  cidr_blocks       = ["82.78.232.79/32", "172.0.0.0/8"]
+  cidr_blocks       = ["82.78.232.79/32", "10.4.1.0/24"]
   description       = "ssh to jenkins_server"
 }
 
@@ -55,7 +55,7 @@ resource "aws_security_group_rule" "jenkins_server_from_source_ingress_jnlp" {
   to_port           = 33453
   protocol          = "tcp"
   security_group_id = "${aws_security_group.jenkins_server.id}"
-  cidr_blocks       = ["172.31.0.0/16"]
+  cidr_blocks       = ["10.4.0.0/16"]
   description       = "jenkins server JNLP Connection"
 }
 

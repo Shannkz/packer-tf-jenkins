@@ -4,20 +4,20 @@ set -x
 
 function wait_for_jenkins ()
 {
-    echo "Waiting jenkins to launch on 8080..."
+  echo "Waiting jenkins to launch on 8080..."
 
-    while (( 1 )); do
-        echo "Waiting for Jenkins"
+  while (( 1 )); do
+      echo "Waiting for Jenkins"
 
-        nc -zv ${server_ip} 8080
-        if (( $? == 0 )); then
-            break
-        fi
+      nc -zv ${server_ip} 8080
+      if (( $? == 0 )); then
+          break
+      fi
 
-        sleep 10
-    done
+      sleep 10
+  done
 
-    echo "Jenkins launched"
+  echo "Jenkins launched"
 }
 
 function slave_setup()
@@ -40,7 +40,7 @@ function slave_setup()
     done
     
     mkdir -p /opt/jenkins-slave
-    chown -R ec2-user:ec2-user /opt/jenkins-slave
+    chown -R ubuntu:ubuntu /opt/jenkins-slave
 
     # Register_slave
     JENKINS_URL="http://${server_ip}:8080"
@@ -58,7 +58,7 @@ function slave_setup()
 
     CRED_ID="$NODE_NAME"
     LABELS="build linux docker"
-    USERID="ec2-user"
+    USERID="ubuntu"
 
     cd /opt
     
@@ -111,7 +111,7 @@ EOF
   <numExecutors>$EXECUTORS</numExecutors>
   <mode>NORMAL</mode>
   <retentionStrategy class="hudson.slaves.RetentionStrategy\$Always"/>
-  <launcher class="hudson.plugins.sshslaves.SSHLauncher" plugin="ssh-slaves@1.5">
+  <launcher class="hudson.plugins.sshslaves.SSHLauncher" plugin="ssh-slaves">
     <host>$SLAVE_IP</host>
     <port>$SSH_PORT</port>
     <credentialsId>$CRED_ID</credentialsId>

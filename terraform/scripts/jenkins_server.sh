@@ -2,6 +2,15 @@
 
 set -x
 
+# Declare the admin pass var
+jenkins_admin_password=""
+
+# Check if the admin pass has been generated
+INITIAL_PASS_FILE="/var/lib/jenkins/secrets/initialAdminPassword"
+
+# Jenkins configuration file
+jenkins_config_file="/etc/default/jenkins"
+
 function wait_for_jenkins()
 {
   while (( 1 )); do
@@ -27,14 +36,15 @@ import sys
 if not sys.argv[1]:
   sys.exit(10)
 
-plaintext_pwd=sys.argv[1]
-encrypted_pwd=bcrypt.hashpw(sys.argv[1], bcrypt.gensalt(rounds=10, prefix=b"2a"))
+encoded_string=sys.argv[1].encode('utf-8')
+plaintext_pwd=sys.argv[1].encode('utf-8')
+encrypted_pwd=bcrypt.hashpw(encoded_string, bcrypt.gensalt(rounds=10, prefix=b"2a"))
 isCorrect=bcrypt.checkpw(plaintext_pwd, encrypted_pwd)
 
 if not isCorrect:
   sys.exit(20);
 
-print "{}".format(encrypted_pwd)
+print("{}".format(encrypted_pwd))
 EOF
 
   chmod +x /tmp/jenkinsHash.py
@@ -56,10 +66,10 @@ EOF
 
   echo "Admin config file created"
 
-  admin_password=$(python /tmp/jenkinsHash.py ${jenkins_admin_password} 2>&1)
+  # admin_password=$(python3 /tmp/jenkinsHash.py ${jenkins_admin_password} 2>&1)
   
   # Please do not remove alter quote as it keeps the hash syntax intact or else while substitution, $<character> will be replaced by null
-  xmlstarlet -q ed --inplace -u "/user/properties/hudson.security.HudsonPrivateSecurityRealm_-Details/passwordHash" -v '#jbcrypt:'"$admin_password" config.xml
+  # xmlstarlet -q ed --inplace -u "/user/properties/hudson.security.HudsonPrivateSecurityRealm_-Details/passwordHash" -v '#jbcrypt:'"$admin_password" config.xml
 
   # Restart
   systemctl restart jenkins
@@ -83,15 +93,34 @@ function install_packages ()
   #firewall-cmd --reload
   # systemctl enable jenkins
   # systemctl restart jenkins
+
+  # Skip the wizard otherwise we cannot install plugins via CLI
+  echo "
+JAVA_ARGS=\"-Djenkins.install.runSetupWizard=false\"" >> $jenkins_config_file
+
+  # cat $jenkins_config_file
+
   sudo systemctl start jenkins
-  sleep 10
+  sleep 15
+
+  while (( 1 )); do
+    echo "waiting for initial password..."
+    
+    if [ -f "$INITIAL_PASS_FILE" ]; then
+      echo '------------------------'
+      echo 'Getting the initial Admin password...'
+      jenkins_admin_password=$(cat /var/lib/jenkins/secrets/initialAdminPassword)
+      break
+    fi
+
+    echo "${INITIAL_PASS_FILE} file not ready yet..."
+    sleep 10
+  done
 }
 
 function configure_jenkins_server ()
 {
-  # Jenkins cli
-  echo "installing the Jenkins cli ..."
-  cp /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar /var/lib/jenkins/jenkins-cli.jar
+  # cp /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar /var/lib/jenkins/jenkins-cli.jar
 
   # Getting initial password
   # PASSWORD=$(cat /var/lib/jenkins/secrets/initialAdminPassword)
@@ -102,6 +131,10 @@ function configure_jenkins_server ()
   plugins_dir="$jenkins_dir/plugins"
 
   cd $jenkins_dir
+
+  # Jenkins cli
+  echo "installing the Jenkins cli ..."
+  wget http://localhost:8080/jnlpJars/jenkins-cli.jar
 
   # Open JNLP port
   xmlstarlet -q ed --inplace -u "/hudson/slaveAgentPort" -v 33453 config.xml

@@ -11,24 +11,7 @@
 
 # Fetch from AWS API most recent Amazon Linux 20.04 image
 data "aws_ami" "ubuntu" {
-    # most_recent = "true"
 
-    # filter {
-    #   name = "name"
-    #   values = ["amzn2-ami-hvm-2.0*x86_64*"]
-    # }
-
-    # filter {
-    #   name = "virtualization-type"
-    #   values = ["hvm"]
-    # }
-
-    # filter {
-    #   name = "root-device-type"
-    #   values = ["ebs"]
-    # }
-
-    # owners = ["amazon"]
   most_recent = "true"
 
   filter {
@@ -114,19 +97,3 @@ resource "aws_instance" "jenkins_server" {
 #         Name = "jenkins_eip"
 #     }
 # }
-
-output "jenkins_server_ami_name" {
-    value = "${data.aws_ami.ubuntu.name}"
-}
-
-output "jenkins_server_ami_id" {
-    value = "${data.aws_ami.ubuntu.id}"
-}
-
-output "jenkins_server_public_ip" {
-  value = "${aws_instance.jenkins_server.public_ip}"
-}
-
-output "jenkins_server_private_ip" {
-  value = "${aws_instance.jenkins_server.private_ip}"
-}

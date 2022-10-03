@@ -1,14 +1,3 @@
-# lookup for the "default" VPC
-# data "aws_vpc" "default_vpc" {
-#   default = true
-# }
-
-# # subnet list in the "default" VPC
-# # The "default" VPC has all "public subnets"
-# data "aws_subnet_ids" "default_public" {
-#   vpc_id = "${data.aws_vpc.default_vpc.id}"
-# }
-
 # Variable that holds the CIDR block for the VPC
 variable "vpc_cidr_block" {
     description = "CIDR block for the VPC Jenkins is deployed in."
@@ -17,7 +6,7 @@ variable "vpc_cidr_block" {
 }
 
 # Creating the VPC resource
-resource "aws_vpc" "jenkins_vpc" {
+resource "aws_vpc" "server_vpc" {
     # Setting the CIDR block of the VPC to the variable vpc_cidr_block
     cidr_block = var.vpc_cidr_block
 
@@ -26,13 +15,13 @@ resource "aws_vpc" "jenkins_vpc" {
 
     # Setting the tag Name to tutorial_vpc
     tags = {
-        Name = "jenkins_vpc"
+        Name = "server_vpc"
     }
 }
 
 # Creating the Internet Gateway resource
 resource "aws_internet_gateway" "jenkins_igw" {
-    vpc_id = aws_vpc.jenkins_vpc.id
+    vpc_id = aws_vpc.server_vpc.id
 
     tags = {
         Name = "jenkins_igw"
@@ -41,7 +30,7 @@ resource "aws_internet_gateway" "jenkins_igw" {
 
 # Creating the public route table resource
 resource "aws_route_table" "jenkins_public_rt" {
-    vpc_id = aws_vpc.jenkins_vpc.id
+    vpc_id = aws_vpc.server_vpc.id
 
     # Adding the IGW to the route table
     route {
@@ -64,7 +53,7 @@ data "aws_availability_zones" "available" {
 
 # Creating the public subnet
 resource "aws_subnet" "jenkins_public_subnet" {
-    vpc_id = aws_vpc.jenkins_vpc.id
+    vpc_id = aws_vpc.server_vpc.id
     cidr_block = var.public_subnet_cidr_block
     availability_zone = data.aws_availability_zones.available.names[0]
     map_public_ip_on_launch = true

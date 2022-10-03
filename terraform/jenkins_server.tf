@@ -72,7 +72,8 @@ resource "aws_instance" "jenkins_server" {
   ami                    		= "${data.aws_ami.ubuntu.image_id}"
   instance_type          		= "t2.micro"
   key_name               		= "${aws_key_pair.jenkins_server.key_name}"
-  subnet_id              		= "${data.aws_subnets.jenkins_public.ids[0]}"
+  # subnet_id              		= "${data.aws_subnets.jenkins_public.ids[0]}"
+  subnet_id              		= var.server_subnet
   vpc_security_group_ids 		= ["${data.aws_security_group.jenkins_server.id}"]
   iam_instance_profile   		= "jenkins_server"
   # user_data              		= "${data.template_file.jenkins_server.rendered}"

@@ -87,25 +87,26 @@ data "aws_security_group" "jenkins_worker_windows" {
 resource "aws_instance" "windows_agent" {
   ami                         = data.aws_ami.windows_server.id
   instance_type               = "t2.micro"
-  vpc_security_group_ids      = ["${aws_security_group.worker_windows.id}"]
+  vpc_security_group_ids      = ["${var.agent_sg_id}"]
   # name_prefix                 = "windows-worker"
   iam_instance_profile        = "dev_jenkins_worker_windows"
   key_name                    = aws_key_pair.jenkins_worker_windows.key_name
-  security_groups             = ["${data.aws_security_group.worker_windows.id}"]
+  security_groups             = ["${var.agent_sg_id}"]
 #   user_data                   = data.cloudinit_config.windows.rendered
-  user_data                   = templatefile("scripts/prepare_agent.tpl", {
+  user_data                   = templatefile("${path.module}/scripts/prepare_agent.tpl", {
       env         = "dev"
       region      = "eu-central-1"
       datacenter  = "dev-eu-central-1"
       node_name   = "eu-central-1-jenkins_worker_windows"
       domain      = ""
       device_name = "eth0"
-      server_ip   = data.aws_instance.controller.public_ip
+      # server_ip   = data.aws_instance.controller.public_ip
+      server_ip   = aws_instance.jenkins_server.public_ip
       worker_pem  = "${data.local_file.jenkins_worker_pem.content}"
       jenkins_username = "usr"
       jenkins_password = "pwd"
   })
-  subnet_id                   = aws_subnet.agent_public_subnet.id
+  subnet_id                   = var.agent_subnet
 
   associate_public_ip_address = true
 

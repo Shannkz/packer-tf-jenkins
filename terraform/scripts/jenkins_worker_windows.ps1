@@ -1,4 +1,6 @@
-<powershell>
+$server_ip = "10.4.1.26"
+$jenkins_username = "usr"
+$jenkins_password = "pwd"
 
 function Wait-For-Jenkins {
 
@@ -62,8 +64,8 @@ function Slave-Setup()
   Write-Host "Downloading jenkins-cli.jar file"
   (New-Object System.Net.WebClient).DownloadFile("$JENKINS_URL/jnlpJars/jenkins-cli.jar", "C:\Jenkins\jenkins-cli.jar")
 
-  Write-Host "Downloading slave.jar file"
-  (New-Object System.Net.WebClient).DownloadFile("$JENKINS_URL/jnlpJars/slave.jar", "C:\Jenkins\slave.jar")
+  Write-Host "Downloading agent.jar file"
+  (New-Object System.Net.WebClient).DownloadFile("$JENKINS_URL/jnlpJars/agent.jar", "C:\Jenkins\agent.jar")
 
   Sleep 10
 
@@ -115,7 +117,7 @@ function Slave-Setup()
   Get-Content -Path C:\Jenkins\node.xml | java -jar C:\Jenkins\jenkins-cli.jar -s $JENKINS_URL -auth $AUTH create-node $NODE_NAME
 
   Write-Host "Registering Node $NODE_NAME via JNLP"
-  Start-Process java -ArgumentList "-jar C:\Jenkins\slave.jar -jnlpCredentials $AUTH -jnlpUrl $JENKINS_URL/computer/$NODE_NAME/slave-agent.jnlp"
+  Start-Process java -ArgumentList "-jar C:\Jenkins\agent.jar -jnlpCredentials $AUTH -jnlpUrl $JENKINS_URL/computer/$NODE_NAME/slave-agent.jnlp"
 }
 
 ### script begins here ###
@@ -125,6 +127,3 @@ Wait-For-Jenkins
 Slave-Setup
 
 echo "Done"
-</powershell>
-<persist>true</persist>
-

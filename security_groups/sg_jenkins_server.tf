@@ -4,7 +4,7 @@ resource "aws_security_group" "jenkins_server" {
   description = "Jenkins Server: created by Terraform for [dev]"
 
   # legacy name of VPC ID
-  vpc_id = var.vpc_id
+  vpc_id = var.server_vpc_id
 
   tags = {
     Name = "jenkins_server"
@@ -17,15 +17,15 @@ resource "aws_security_group" "jenkins_server" {
 ###############################################################################
 
 # ssh
-resource "aws_security_group_rule" "jenkins_server_from_source_ingress_ssh" {
-  type              = "ingress"
-  from_port         = 22
-  to_port           = 22
-  protocol          = "tcp"
-  security_group_id = "${aws_security_group.jenkins_server.id}"
-  cidr_blocks       = ["82.78.232.79/32", "10.4.1.0/24"]
-  description       = "ssh to jenkins_server"
-}
+# resource "aws_security_group_rule" "jenkins_server_from_source_ingress_ssh" {
+#   type              = "ingress"
+#   from_port         = 22
+#   to_port           = 22
+#   protocol          = "tcp"
+#   security_group_id = "${aws_security_group.jenkins_server.id}"
+#   cidr_blocks       = ["82.78.232.79/32", "10.4.1.0/24"]
+#   description       = "ssh to jenkins_server"
+# }
 
 # web
 resource "aws_security_group_rule" "jenkins_server_from_source_ingress_webui" {
@@ -55,7 +55,7 @@ resource "aws_security_group_rule" "jenkins_server_from_source_ingress_jnlp" {
   to_port           = 33453
   protocol          = "tcp"
   security_group_id = "${aws_security_group.jenkins_server.id}"
-  cidr_blocks       = ["10.4.0.0/16"]
+  cidr_blocks       = ["0.0.0.0/0"]
   description       = "jenkins server JNLP Connection"
 }
 

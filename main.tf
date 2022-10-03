@@ -22,7 +22,8 @@ module "vpc" {
 
 module "security_group" {
     source = "./security_groups"
-    vpc_id = module.vpc.vpc_id
+    server_vpc_id = module.vpc.server_vpc_id
+    agent_vpc_id = module.vpc.worker_vpc_id
     depends_on = [
       module.vpc
     ]
@@ -30,9 +31,14 @@ module "security_group" {
 
 module "terraform" {
     source = "./terraform"
-    vpc_id = module.vpc.vpc_id
+    # vpc_id = module.vpc.vpc_id
     # security_group = module.security_group.sg_id
     # public_subnet = module.vpc.public_subnet_id
+
+    server_subnet = module.vpc.server_public_subnet_id
+    agent_subnet  = module.vpc.worker_public_subnet_id
+    agent_sg_id   = module.security_group.agent_sg_id
+
     depends_on = [
       module.security_group
     ]

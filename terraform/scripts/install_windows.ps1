@@ -16,5 +16,4 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.We
 # before installation, if you are doing deployment on same machine. Also install WebDeploy manually beforehand to match configuration with IIS
 # You have been warned!
 
-choco install git netcat jdk8 nuget.commandline visualstudio2017-workload-webbuildtools visualstudio2017buildtools -y
-
+choco install git netcat openjdk11 nuget.commandline visualstudio2017-workload-webbuildtools visualstudio2017buildtools -y
